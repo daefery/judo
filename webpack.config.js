@@ -1,34 +1,55 @@
 const webpack = require('webpack');
 const path = require('path');
 
+
+// In webpack.prod.config.js
+// This file contains the configuration needed by Webpack to compile the sources to bundle.js
+
+const webpack = require('webpack');
+
+// The path module provides utilities for working with file
+//  and directory paths. It can be accessed using:
+// See: https://nodejs.org/docs/latest/api/path.html
+const path = require('path');
+
 module.exports = {
+  devtool: 'inline-source-map',
   entry: path.join(__dirname, 'src', 'app-client.js'),
+
+  // Production details
   output: {
     path: path.join(__dirname, 'src', 'static', 'js'),
     filename: 'bundle.js'
   },
-  module: {
-    loaders: [{
-      test: path.join(__dirname, 'src'),
-      loader: ['babel-loader'],
-      query: {
-        cacheDirectory: 'babel_cache',
-        presets: ['react', 'es2015']
-      }
-    }]
+
+  // Bundle lookup dir for included/imported modules
+  // By default, bundler/webpack with search here for the scripts
+  resolve: {
+    modulesDirectories: ['node_modules', 'src'],
+    extensions: ['', '.js', '.jsx']
   },
+
+  module: {
+    loaders: [
+      {
+        test: /\.js[x]?$/,
+        exclude: /node_modules/,
+        loaders: ['babel?presets[]=react,presets[]=es2015']
+      },
+        // I am using SASS as Transpiler for style sheets
+      {test: /\.scss$/, loaders: ["style-loader", "css-loader", "sass-loader"]},
+
+    ]
+  },
+
   plugins: [
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+      'process.env': {
+        // This tells the Webpack and Babel for optimization for performance
+        NODE_ENV: JSON.stringify('production')
+      }
     }),
-    new webpack.optimize.DedupePlugin(),
-    new webpack.optimize.OccurenceOrderPlugin(),
-    new webpack.optimize.UglifyJsPlugin({
-      compress: { warnings: false },
-      mangle: true,
-      sourcemap: false,
-      beautify: false,
-      dead_code: true
-    })
+    new webpack.optimize.UglifyJsPlugin(),
+    new webpack.NoErrorsPlugin(), // Makes sure Webpack will not compile if Errors
   ]
 };
